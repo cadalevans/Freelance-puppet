@@ -1,13 +1,17 @@
 package com.example.freelance_java_puppet.controller;
 
 import com.example.freelance_java_puppet.DTO.CardDTO;
+import com.example.freelance_java_puppet.entity.Card;
+import com.example.freelance_java_puppet.entity.History;
 import com.example.freelance_java_puppet.service.CardService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
+@RequestMapping("/api/card")
 public class CardController {
 
     @Autowired
@@ -17,4 +21,12 @@ public class CardController {
     public CardDTO getCard(@PathVariable("userId") int userId) {
         return cardService.getCardWithHistories(userId);
     }
+
+    @PostMapping("/add")
+    public ResponseEntity<Card> addCard(@RequestParam int userId, @RequestParam int historyId) {
+        Card card = cardService.addCardWithHistory(userId, historyId);
+        return ResponseEntity.ok(card);
+    }
+
+
 }

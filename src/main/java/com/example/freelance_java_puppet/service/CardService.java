@@ -26,6 +26,42 @@ public class CardService {
     @Autowired
     private HistoryRepository historyRepository;
 
+
+
+    public Card addCardWithHistory(int userId, int historyId) {
+
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        if (user.getCard() == null) {
+            Card card = new Card();
+            card.setUser(user);
+        }
+
+        // 3️⃣ Fetch history item
+        History history = historyRepository.findById(historyId)
+                .orElseThrow(() -> new RuntimeException("History item not found"));
+
+        Card card = user.getCard();
+
+        card.getHistories().add(history); // Add history item
+
+        // 5️⃣ Calculate total price using Stream
+        double totalPrice = card.getHistories()
+                .stream()
+                .mapToDouble(History::getPrice)
+                .sum();
+        card.setTotalPrice(totalPrice);
+
+        Card savedCard = cardRepository.save(card);
+
+        user.setCard(savedCard);
+        userRepository.save(user);
+
+        return savedCard;
+    }
+
+
     public Card deleteHistoryFromCard(int userId, int historyId) {
 
         User user = userRepository.findById(userId)

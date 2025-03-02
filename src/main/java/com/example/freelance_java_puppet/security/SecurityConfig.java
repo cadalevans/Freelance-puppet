@@ -29,7 +29,7 @@ public class SecurityConfig {
                         ).permitAll() // No authentication required for these paths
 
                         // Require authentication for /pay-history/{userId}
-                        .requestMatchers("/pay-history/{userId}").authenticated() // Only authenticated users can access
+                      //  .requestMatchers("/pay-history/{userId}").authenticated() // Only authenticated users can access
 
                         // For other requests, allow everyone or require specific roles as needed
                         .anyRequest().permitAll()

@@ -4,6 +4,8 @@ import com.example.freelance_java_puppet.entity.Card;
 import com.example.freelance_java_puppet.entity.History;
 import com.example.freelance_java_puppet.entity.Transaction;
 import com.example.freelance_java_puppet.entity.User;
+import com.example.freelance_java_puppet.repository.CardRepository;
+import com.example.freelance_java_puppet.repository.HistoryRepository;
 import com.example.freelance_java_puppet.repository.TransactionRepository;
 import com.example.freelance_java_puppet.repository.UserRepository;
 import com.stripe.Stripe;
@@ -24,10 +26,22 @@ public class TransactionService {
     @Autowired
     private TransactionRepository transactionRepository;
 
+    @Autowired
+    public HistoryRepository historyRepository;
+
+
+    @Value("${stripe.currency}")
+    private String currency;
+
+    @Autowired
+    private CardRepository cardRepository;
+
     @Value("${stripe.key.secret}")
     private String secretKey;
-    public Transaction processPayment1(Transaction paymentRequest, int userId) throws StripeException, StripeException {
+    public Transaction processPayment1( int userId) throws StripeException, StripeException {
         Stripe.apiKey = secretKey;
+
+        Transaction paymentRequest = new Transaction();
 
         // Fetch user by userId
         Optional<User> userOptional = userRepository.findById(userId);
@@ -43,7 +57,7 @@ public class TransactionService {
         Map<String, Object> params = new HashMap<>();
         int amountInCents = (int) Math.round(card.getTotalPrice() * 100); // Ensures correct rounding
         params.put("amount", amountInCents);
-        params.put("currency", "eur");
+        params.put("currency", currency);
         params.put("payment_method_types", Collections.singletonList("card"));
         params.put("payment_method", "pm_card_visa"); // This is for testing, replace with dynamic card method if necessary
 
@@ -69,9 +83,19 @@ public class TransactionService {
                 for (History history : histories) {
                     user.getHistories().add(history);
                     history.getUsers().add(user);
+
+                    history.setCard(null);
+
+                    historyRepository.save(history);
+
                 }
             }
 
+            user.setCard(null);
+            paymentRequest.setUser(user);
+            userRepository.save(user);
+            cardRepository.delete(card);
+            paymentRequest.setCurrency(currency);
             // Save the transaction to the database (you may want to adjust this part)
             paymentRequest.setPaymentId(paymentIntent.getId());
             return transactionRepository.save(paymentRequest);
