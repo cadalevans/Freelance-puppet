@@ -1,5 +1,6 @@
 package com.example.freelance_java_puppet.controller;
 
+import com.example.freelance_java_puppet.DTO.HistoryDTO;
 import com.example.freelance_java_puppet.entity.Category;
 import com.example.freelance_java_puppet.entity.History;
 import com.example.freelance_java_puppet.service.CategoryService;
@@ -31,8 +32,8 @@ public class CategoryController {
     }
 
     @GetMapping("/{categoryId}/histories")
-    public ResponseEntity<List<History>> getHistoriesByCategory(@PathVariable int categoryId) {
-        List<History> histories = categoryService.getHistoriesByCategory(categoryId);
+    public ResponseEntity<List<HistoryDTO>> getHistoriesByCategory(@PathVariable int categoryId) {
+        List<HistoryDTO> histories = categoryService.getHistoriesByCategory(categoryId);
         return ResponseEntity.ok(histories);
     }
 

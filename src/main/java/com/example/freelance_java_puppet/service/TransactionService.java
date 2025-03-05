@@ -95,6 +95,7 @@ public class TransactionService {
             paymentRequest.setUser(user);
             userRepository.save(user);
             cardRepository.delete(card);
+            paymentRequest.setAmount(card.getTotalPrice());
             paymentRequest.setCurrency(currency);
             // Save the transaction to the database (you may want to adjust this part)
             paymentRequest.setPaymentId(paymentIntent.getId());

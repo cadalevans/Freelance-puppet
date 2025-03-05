@@ -1,5 +1,6 @@
 package com.example.freelance_java_puppet.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -22,8 +23,23 @@ public class Category {
 
     private String name;
 
-    @JsonManagedReference // Serializes 'histories' field only
+    @JsonIgnore // Serializes 'histories' field only
     @ManyToMany
     private List<History> histories = new ArrayList<>();
 
+    public List<History> getHistories() {
+        return histories;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setHistories(List<History> histories) {
+        this.histories = histories;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
 }

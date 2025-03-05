@@ -103,7 +103,7 @@ public class CardService {
 
 
     // Method to get the Card as DTO
-    public CardDTO getCardWithHistories(int userId) {
+    public List<HistoryDTO> getCardWithHistories(int userId) {
         // Retrieve the Card entity from the database
        User user = userRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("User not found"));
@@ -127,7 +127,7 @@ public class CardService {
         // Set the histories in the DTO
         cardDTO.setHistories(historyDTOs);
 
-        return cardDTO;
+        return historyDTOs;
     }
 
 

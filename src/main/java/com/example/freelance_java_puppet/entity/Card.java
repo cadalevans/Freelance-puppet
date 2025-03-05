@@ -30,4 +30,28 @@ public class Card {
     public List<History> getHistories() {
         return items;
     }
+
+    public double getTotalPrice() {
+        return totalPrice;
+    }
+
+    public List<History> getItems() {
+        return items;
+    }
+
+    public void setItems(List<History> items) {
+        this.items = items;
+    }
+
+    public User getUser() {
+        return user;
+    }
+
+    public void setTotalPrice(double totalPrice) {
+        this.totalPrice = totalPrice;
+    }
+
+    public void setUser(User user) {
+        this.user = user;
+    }
 }

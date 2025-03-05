@@ -32,4 +32,6 @@ public class HistoryController {
         // Return response
         return ResponseEntity.status(HttpStatus.CREATED).body(history);
     }
+
+
 }

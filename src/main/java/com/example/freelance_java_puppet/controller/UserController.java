@@ -1,16 +1,24 @@
 package com.example.freelance_java_puppet.controller;
 
+import com.example.freelance_java_puppet.DTO.HistoryDTO;
 import com.example.freelance_java_puppet.entity.User;
 import com.example.freelance_java_puppet.ressource.LoginRequest;
 import com.example.freelance_java_puppet.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
 @RestController
-@RequestMapping("/api/auth")
+@RequestMapping("/api/user")
+@CrossOrigin("**")
 public class UserController {
 
     @Autowired
@@ -20,52 +28,65 @@ public class UserController {
     private PasswordEncoder passwordEncoder;
 
     // 1️⃣ User Registration
-    @PostMapping("/register")
+    @PostMapping(value = "/register", consumes = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<String> registerUser(@RequestBody User user) {
         userService.saveUser(user);
         return ResponseEntity.ok("User registered successfully! Check your email for verification.");
     }
 
-    // 2️⃣ Resend Verification Email
-    @PostMapping("/resend-verification")
-    public ResponseEntity<String> resendVerificationEmail(@RequestParam String email) {
-        userService.resendVerificationEmail(email);
-        return ResponseEntity.ok("Verification email resent successfully!");
+    @GetMapping("/is-verified/{email}")
+    public ResponseEntity<Boolean> checkIfUserIsVerified(@PathVariable String email) {
+        User user = userService.findByEmail(email);
+        if (user == null) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(false);
+        }
+        return ResponseEntity.ok(user.isVerified());
     }
 
-    // 3️⃣ Verify Email
-    @PostMapping("/verify")
-    public ResponseEntity<String> verifyUser(@RequestParam String email, @RequestParam String code) {
+    // 1️⃣ Resend Verification Email
+    @PostMapping("/resend-verification/{email}")
+    public ResponseEntity<?> resendVerificationEmail(@PathVariable String email) {
+        userService.resendVerificationEmail(email);
+        return ResponseEntity.ok(Collections.singletonMap("message", "Email verification has been send "));
+    }
+
+    // 2️⃣ Verify Email
+    @PostMapping("/verify/{email}/{code}")
+    public ResponseEntity<?> verifyUser(@PathVariable String email, @PathVariable String code) {
         boolean verified = userService.verifyUser(email, code);
         if (verified) {
-            return ResponseEntity.ok("Email verified successfully!");
+            return ResponseEntity.ok(Collections.singletonMap("message","Email verified successfully"));
         } else {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Invalid or expired verification code!");
+            Map<String,String> response = new HashMap<>();
+            response.put("message", "verification error please check the code ");
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
         }
     }
 
-    // 4️⃣ Request Password Reset (User forgets password)
-    @PostMapping("/forgot-password")
-    public ResponseEntity<String> requestPasswordReset(@RequestParam String email) {
+    // 3️⃣ Request Password Reset (User forgets password)
+    @PostMapping("/forgot-password/{email}")
+    public ResponseEntity<?> requestPasswordReset(@PathVariable String email) {
         userService.sendPasswordResetCode(email);
-        return ResponseEntity.ok("Password reset code sent to your email.");
+        return ResponseEntity.ok(Collections.singletonMap("message", "Password reset email has been send to your email"));
     }
 
-    // 5️⃣ Resend Password Reset Email
-    @PostMapping("/resend-password-reset")
-    public ResponseEntity<String> resendPasswordResetEmail(@RequestParam String email) {
+    // 4️⃣ Resend Password Reset Email
+    @PostMapping("/resend-password-reset/{email}")
+    public ResponseEntity<?> resendPasswordResetEmail(@PathVariable String email) {
         userService.resendPasswordResetEmail(email);
-        return ResponseEntity.ok("Password reset email resent successfully!");
+        return ResponseEntity.ok( Collections.singletonMap("message", "Password reset email resent successfully!"));
     }
 
-    // 6️⃣ Reset Password (After receiving reset code)
-    @PostMapping("/reset-password")
-    public ResponseEntity<String> resetPassword(@RequestParam String email, @RequestParam String code, @RequestParam String newPassword) {
+    // 5️⃣ Reset Password (After receiving reset code)
+    @PostMapping("/reset-password/{email}/{code}")
+    public ResponseEntity<?> resetPassword(@PathVariable String email,
+                                                @PathVariable String code,
+                                                @RequestParam String newPassword) {
         boolean resetSuccessful = userService.resetPassword(email, code, newPassword);
         if (resetSuccessful) {
-            return ResponseEntity.ok("Password reset successful! You can now log in with your new password.");
+            return ResponseEntity.ok(Collections.singletonMap("message", "Password reset successful! You can now log in with your new password."));
         } else {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Invalid or expired reset code!");
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Collections.singletonMap("message", "Invalid or expired reset code!"));
         }
     }
 
@@ -74,14 +95,32 @@ public class UserController {
         User user = userService.getUserByEmail(loginRequest.getEmail());
 
         if (user == null) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid email or password");
+            Map<String,String> response = new HashMap<>();
+            response.put("message","Invalid email or password");
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
+        }
+
+        if(!user.isVerified()){
+            Map<String,String> response = new HashMap<>();
+            response.put("message", "You have to verify your account ");
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
         }
 
         if (passwordEncoder.matches(loginRequest.getPassword(), user.getPassword())) {
             // Successful authentication
-            return ResponseEntity.ok("Login successful");
+            Map<String,String> response = new HashMap<>();
+            response.put("message","Login successful");
+            return ResponseEntity.ok(response);
         } else {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid email or password");
+            Map<String,String> response = new HashMap<>();
+            response.put("message","Invalid email or password");
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
         }
+    }
+
+    @GetMapping("/{userId}/histories")
+    public ResponseEntity<List<HistoryDTO>> getHistoriesByCategory(@PathVariable("userId") int userId) {
+        List<HistoryDTO> histories = userService.getHistoriesByUser(userId);
+        return ResponseEntity.ok(histories);
     }
 }

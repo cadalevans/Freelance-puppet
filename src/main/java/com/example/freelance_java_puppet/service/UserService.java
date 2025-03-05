@@ -1,5 +1,7 @@
 package com.example.freelance_java_puppet.service;
 
+import com.example.freelance_java_puppet.DTO.HistoryDTO;
+import com.example.freelance_java_puppet.entity.Category;
 import com.example.freelance_java_puppet.entity.User;
 import com.example.freelance_java_puppet.repository.UserRepository;
 import com.example.freelance_java_puppet.ressource.EmailAlreadyExistsException;
@@ -8,8 +10,10 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Service
 public class UserService {
@@ -201,5 +205,28 @@ public class UserService {
     public int getIdByEmail(String email){
         User user = userRepository.findByEmail(email);
         return user != null? user.getId() : null;
+    }
+
+    public List<HistoryDTO> getHistoriesByUser(int userId) {
+       User user = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("user not found!"));
+
+        List<HistoryDTO> historyDTOs = user.getHistories().stream()
+                .map(history -> {
+                    HistoryDTO historyDTO = new HistoryDTO();
+                    historyDTO.setName(history.getName());
+                    historyDTO.setAudio(history.getAudio());
+                    historyDTO.setImage(history.getImage());
+                    historyDTO.setDescription(history.getDescription());
+                    return historyDTO;
+                })
+                .collect(Collectors.toList());
+
+        return historyDTOs;
+    }
+
+    public User findByEmail(String email) {
+
+        return userRepository.findByEmail(email);
     }
 }
