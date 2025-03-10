@@ -19,15 +19,20 @@ public class CardController {
     private CardService cardService;
 
     @GetMapping("/history-by-userCard/{userId}")
-    public List<HistoryDTO> getCard(@PathVariable("userId") int userId) {
+    public CardDTO getCard(@PathVariable("userId") int userId) {
         return cardService.getCardWithHistories(userId);
     }
 
-    @PostMapping("/add/{userId}/{historyId}")
-    public ResponseEntity<Card> addCard(@PathVariable("userId") int userId, @PathVariable("historyId") int historyId) {
-        Card card = cardService.addCardWithHistory(userId, historyId);
+    @PostMapping("/add-card/{userId}/{historyId}")
+    public ResponseEntity<CardDTO> addCard(@PathVariable("userId") int userId, @PathVariable("historyId") int historyId) {
+        CardDTO card = cardService.addCardWithHistory(userId, historyId);
         return ResponseEntity.ok(card);
     }
 
 
+    @PostMapping("/delete-card/{userId}/{historyId}")
+    public ResponseEntity<CardDTO> removeCard(@PathVariable("userId") int userId, @PathVariable("historyId") int historyId) {
+        CardDTO card = cardService.deleteHistoryFromCard(userId, historyId);
+        return ResponseEntity.ok(card);
+    }
 }

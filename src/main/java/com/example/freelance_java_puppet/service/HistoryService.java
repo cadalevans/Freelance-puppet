@@ -68,12 +68,31 @@ public class HistoryService {
         return histories.stream()
                 .map(history -> {
                     HistoryDTO historyDTO = new HistoryDTO();
+                    historyDTO.setId(history.getId());
                     historyDTO.setName(history.getName());
                     historyDTO.setImage(history.getImage());
                     historyDTO.setPrice(history.getPrice());
+                    historyDTO.setDescription(history.getDescription());
                     return historyDTO;
                 })
                 .collect(Collectors.toList());
     }
+
+    public HistoryDTO getHistoryById(int historyId){
+        History history = historyRepository.findById(historyId).orElseThrow(()-> new RuntimeException("Not history found "));
+
+// Convert the single History object to a HistoryDTO
+        HistoryDTO historyDTO = new HistoryDTO();
+        historyDTO.setId(history.getId());
+        historyDTO.setName(history.getName());
+        historyDTO.setImage(history.getImage());
+        historyDTO.setPrice(history.getPrice());
+        historyDTO.setCategoryName(history.getCategories());
+        historyDTO.setDescription(history.getDescription());  // Include description if necessary
+        historyDTO.setAudio(history.getAudio());  // Include audio if necessary
+
+        return historyDTO;
+    }
+
 
 }

@@ -5,38 +5,50 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 
 @Service
 public class FileService {
 
-    private static final String UPLOAD_DIRECTORY = "uploads"; // Root directory for uploads
-    private static final String IMAGE_DIRECTORY = UPLOAD_DIRECTORY + "/image"; // Image folder
-    private static final String AUDIO_DIRECTORY = UPLOAD_DIRECTORY + "/audio"; // Audio folder
+    // Define the base upload directory as an absolute path
+    private static final Path BASE_UPLOAD_DIRECTORY = Paths.get(System.getProperty("user.dir"), "uploads");
+
+    // Define subdirectories for images and audio
+    private static final Path IMAGE_DIRECTORY = BASE_UPLOAD_DIRECTORY.resolve("image");
+    private static final Path AUDIO_DIRECTORY = BASE_UPLOAD_DIRECTORY.resolve("audio");
 
     public String uploadFile(MultipartFile file, String fileType) {
         try {
-            // Define the folder path based on the file type (audio or image)
-            String folderPath = (fileType.equalsIgnoreCase("audio")) ? AUDIO_DIRECTORY : IMAGE_DIRECTORY;
-
-            // Create the directory if it does not exist
-            File directory = new File(folderPath);
-            if (!directory.exists()) {
-                directory.mkdirs();
+            // Determine the target directory based on the file type
+            Path targetDirectory;
+            if ("audio".equalsIgnoreCase(fileType)) {
+                targetDirectory = Paths.get("uploads", "audio");
+            } else if ("image".equalsIgnoreCase(fileType)) {
+                targetDirectory = Paths.get("uploads", "image");
+            } else {
+                throw new IllegalArgumentException("Unsupported file type: " + fileType);
             }
 
-            // File path where it will be saved
-            String filePath = folderPath + "/" + file.getOriginalFilename();
+            // Create the target directory if it doesn't exist
+            if (Files.notExists(targetDirectory)) {
+                Files.createDirectories(targetDirectory);
+            }
 
-            // Save the file to the local file system
-            File dest = new File(filePath);
-            file.transferTo(dest);
+            // Define the target file path
+            Path targetFilePath = targetDirectory.resolve(file.getOriginalFilename());
 
-            // Return the relative URL to the file (which will be accessible via /uploads)
-            return "/uploads/" + file.getOriginalFilename();  // We store the relative URL
+            // Save the file to the target location
+            file.transferTo(targetFilePath.toFile());
+
+            // Return the relative URL to access the file
+            return "/uploads/" + fileType + "/" + file.getOriginalFilename();
         } catch (IOException e) {
             e.printStackTrace();
-            throw new RuntimeException("Failed to upload file");
+            throw new RuntimeException("Failed to upload file", e);
         }
     }
+
 }
 

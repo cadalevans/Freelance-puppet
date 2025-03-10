@@ -4,6 +4,7 @@ import com.example.freelance_java_puppet.DTO.HistoryDTO;
 import com.example.freelance_java_puppet.entity.User;
 import com.example.freelance_java_puppet.ressource.LoginRequest;
 import com.example.freelance_java_puppet.service.UserService;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -16,6 +17,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+@Slf4j
 @RestController
 @RequestMapping("/api/user")
 @CrossOrigin("**")
@@ -95,12 +97,16 @@ public class UserController {
         User user = userService.getUserByEmail(loginRequest.getEmail());
 
         if (user == null) {
+
+           // log.error("User not found with email: " + loginRequest.getEmail());
             Map<String,String> response = new HashMap<>();
             response.put("message","Invalid email or password");
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
         }
 
         if(!user.isVerified()){
+
+        //    log.error("User with email " + loginRequest.getEmail() + " is not verified.");
             Map<String,String> response = new HashMap<>();
             response.put("message", "You have to verify your account ");
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
@@ -122,5 +128,12 @@ public class UserController {
     public ResponseEntity<List<HistoryDTO>> getHistoriesByCategory(@PathVariable("userId") int userId) {
         List<HistoryDTO> histories = userService.getHistoriesByUser(userId);
         return ResponseEntity.ok(histories);
+    }
+
+    @GetMapping("/id-by-email/{email}")
+    public ResponseEntity<?> getUserIdByEmail( @PathVariable("email") String email){
+      int userId =  userService.findUserIdByEmail(email);
+
+         return ResponseEntity.ok(userId);
     }
 }

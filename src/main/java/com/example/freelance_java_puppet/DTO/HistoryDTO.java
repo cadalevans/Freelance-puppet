@@ -1,15 +1,23 @@
 package com.example.freelance_java_puppet.DTO;
 
+import com.example.freelance_java_puppet.entity.Category;
+import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
+
+import java.util.List;
 
 @Data
 public class HistoryDTO {
 
+    private int id;
     private String name;
     private String description;
     private String image;
     private String audio;
     private double price;
+
+    private List<Category> categoryName;
 
     public String getDescription() {
         return description;
@@ -49,5 +57,21 @@ public class HistoryDTO {
 
     public String getName() {
         return name;
+    }
+
+    public int getId() {
+        return id;
+    }
+
+    public void setId(int id) {
+        this.id = id;
+    }
+
+    public List<Category> getCategoryName() {
+        return categoryName;
+    }
+
+    public void setCategoryName(List<Category> categoryName) {
+        this.categoryName = categoryName;
     }
 }

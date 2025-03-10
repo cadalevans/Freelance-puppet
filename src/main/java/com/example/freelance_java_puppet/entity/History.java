@@ -21,6 +21,9 @@ public class History {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private int id;
     private String name;
+
+    @Lob  // ✅ Stores large text data
+    @Column(columnDefinition = "TEXT")  // ✅ Tells MySQL to use TEXT type
     private String description;
 
     @Lob
@@ -109,5 +112,12 @@ public class History {
     public void setUsers(List<User> users) {
         this.users = users;
     }
-    
+
+    public void setId(int id) {
+        this.id = id;
+    }
+
+    public int getId() {
+        return id;
+    }
 }

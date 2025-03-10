@@ -28,7 +28,7 @@ public class CardService {
 
 
 
-    public Card addCardWithHistory(int userId, int historyId) {
+    public CardDTO addCardWithHistory(int userId, int historyId) {
 
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("User not found"));
@@ -36,6 +36,7 @@ public class CardService {
         if (user.getCard() == null) {
             Card card = new Card();
             card.setUser(user);
+            user.setCard(card);
         }
 
         // 3️⃣ Fetch history item
@@ -45,6 +46,7 @@ public class CardService {
         Card card = user.getCard();
 
         card.getHistories().add(history); // Add history item
+        history.getCards().add(card);
 
         // 5️⃣ Calculate total price using Stream
         double totalPrice = card.getHistories()
@@ -54,15 +56,16 @@ public class CardService {
         card.setTotalPrice(totalPrice);
 
         Card savedCard = cardRepository.save(card);
+        historyRepository.save(history);
 
         user.setCard(savedCard);
         userRepository.save(user);
 
-        return savedCard;
+        return getCardWithHistories(userId);
     }
 
 
-    public Card deleteHistoryFromCard(int userId, int historyId) {
+    public CardDTO deleteHistoryFromCard(int userId, int historyId) {
 
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("No user found"));
@@ -98,17 +101,21 @@ public class CardService {
         // historyRepository.delete(history);  // Uncomment this line if you want to delete the history
 
         // Return the updated Card
-        return card;
+        return getCardWithHistories(userId);
     }
 
 
     // Method to get the Card as DTO
-    public List<HistoryDTO> getCardWithHistories(int userId) {
+    public CardDTO getCardWithHistories(int userId) {
         // Retrieve the Card entity from the database
        User user = userRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
        Card card = user.getCard();
+       if( card == null){
+
+           throw new RuntimeException("No card associated with the user");
+       }
         // Create the CardDTO and set its properties
         CardDTO cardDTO = new CardDTO();
 
@@ -118,8 +125,12 @@ public class CardService {
         List<HistoryDTO> historyDTOs = card.getHistories().stream()
                 .map(history -> {
                     HistoryDTO historyDTO = new HistoryDTO();
+                    historyDTO.setId(history.getId());
                     historyDTO.setName(history.getName());
                     historyDTO.setPrice(history.getPrice());
+                    historyDTO.setImage(history.getImage());
+                    historyDTO.setAudio(history.getAudio());
+                    historyDTO.setDescription(history.getDescription());
                     return historyDTO;
                 })
                 .collect(Collectors.toList());
@@ -127,7 +138,7 @@ public class CardService {
         // Set the histories in the DTO
         cardDTO.setHistories(historyDTOs);
 
-        return historyDTOs;
+        return cardDTO;
     }
 
 

@@ -229,4 +229,9 @@ public class UserService {
 
         return userRepository.findByEmail(email);
     }
+
+    public int findUserIdByEmail(String email){
+        User user = findByEmail(email);
+       return user.getId();
+    }
 }
