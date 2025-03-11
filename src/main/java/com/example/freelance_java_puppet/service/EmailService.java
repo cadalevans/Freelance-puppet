@@ -38,6 +38,32 @@ public class EmailService {
         sendHtmlEmail(to, subject, content);
     }
 
+    public void sendInvoiceEmail(String to, String invoiceUrl) {
+        String subject = "💳 Payment Receipt - Thank you for your purchase!";
+        String content = """
+            <div style='font-family: Arial, sans-serif; max-width: 600px; margin: auto; border: 1px solid #ddd; border-radius: 8px; padding: 20px; background-color: #f9f9f9;'>
+                <div style='text-align: center;'>
+                    <h2 style='color: #4CAF50;'>✅ Payment Successful</h2>
+                    <p style='color: #777;'>Thank you for your payment. Your invoice is ready for download.</p>
+                </div>
+                <div style='text-align: center; margin: 20px 0;'>
+                    <a href='""" + invoiceUrl + """
+                       '
+                       style='background-color: #4CAF50; color: white; padding: 12px 30px; text-decoration: none; font-size: 16px; border-radius: 5px;'>
+                       📄 Download Invoice
+                    </a>
+                </div>
+                <div style='margin-top: 30px; text-align: center; color: #999; font-size: 12px;'>
+                    <p>If you have any questions about this payment, please contact our support team.</p>
+                    <p>Best regards,<br><strong>Your Company Name</strong></p>
+                </div>
+            </div>
+            """;
+
+        sendHtmlEmail(to, subject, content);
+    }
+
+
     private void sendHtmlEmail(String to, String subject, String htmlContent) {
         try {
             MimeMessage message = mailSender.createMimeMessage();

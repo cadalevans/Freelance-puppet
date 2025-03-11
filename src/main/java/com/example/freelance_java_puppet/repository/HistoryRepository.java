@@ -14,4 +14,5 @@ public interface HistoryRepository extends JpaRepository<History,Integer> {
     @Query("SELECT h FROM History h WHERE h NOT IN (SELECT u.histories FROM User u WHERE u.id = :userId)")
     List<History> findHistoriesNotPurchasedByUser(@Param("userId") int userId);
 
+    void deleteByUsers_Id(int userId);
 }

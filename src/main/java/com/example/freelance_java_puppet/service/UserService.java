@@ -2,7 +2,9 @@ package com.example.freelance_java_puppet.service;
 
 import com.example.freelance_java_puppet.DTO.HistoryDTO;
 import com.example.freelance_java_puppet.entity.Category;
+import com.example.freelance_java_puppet.entity.History;
 import com.example.freelance_java_puppet.entity.User;
+import com.example.freelance_java_puppet.repository.HistoryRepository;
 import com.example.freelance_java_puppet.repository.UserRepository;
 import com.example.freelance_java_puppet.ressource.EmailAlreadyExistsException;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -26,6 +28,8 @@ public class UserService {
 
     @Autowired
     private EmailService emailService;
+    @Autowired
+    private HistoryRepository historyRepository;
 
     private boolean emailExists(String email) {
         // Use the repository's findByEmail method to check if an entry with the given email exists
@@ -233,5 +237,19 @@ public class UserService {
     public int findUserIdByEmail(String email){
         User user = findByEmail(email);
        return user.getId();
+    }
+
+    public String deleteHistoryByUserId(int userId){
+        User user = userRepository.findById(userId).orElseThrow(() -> new RuntimeException("user not found"));
+        List<History> history = user.getHistories();
+        user.getHistories().clear();
+        // Persist changes to remove the relationships (if needed)
+        userRepository.save(user);  // Save the user after clearing histories
+
+        // Delete all histories related to this user
+        historyRepository.deleteByUsers_Id(userId);
+
+        return "Successful deleted history from user "+ user.getLastName();
+
     }
 }

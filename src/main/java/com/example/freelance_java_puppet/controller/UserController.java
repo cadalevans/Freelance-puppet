@@ -136,4 +136,17 @@ public class UserController {
 
          return ResponseEntity.ok(userId);
     }
+
+
+    // delete all history by user id
+
+    @DeleteMapping("/{userId}/histories")
+    public ResponseEntity<String> deleteAllHistories(@PathVariable int userId) {
+        try {
+            userService.deleteHistoryByUserId(userId);
+            return ResponseEntity.ok("All histories deleted for user with id " + userId);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
+        }
+    }
 }
