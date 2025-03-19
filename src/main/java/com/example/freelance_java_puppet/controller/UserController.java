@@ -125,7 +125,7 @@ public class UserController {
     }
 
     @GetMapping("/{userId}/histories")
-    public ResponseEntity<List<HistoryDTO>> getHistoriesByCategory(@PathVariable("userId") int userId) {
+    public ResponseEntity<List<HistoryDTO>> getHistoriesByUser(@PathVariable("userId") int userId) {
         List<HistoryDTO> histories = userService.getHistoriesByUser(userId);
         return ResponseEntity.ok(histories);
     }

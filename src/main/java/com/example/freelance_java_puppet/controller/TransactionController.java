@@ -8,6 +8,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -36,13 +37,13 @@ public class TransactionController {
 
     //success url after payment
 
-    @PostMapping("/payment-success/{paymentIntentId}")
-    public ResponseEntity<String> handleSuccessfulPayment(@PathVariable String paymentIntentId) throws StripeException {
-        boolean success = transactionService.finalizePayment(paymentIntentId);
+    @PostMapping("/payment-success/{paymentIntentId}/{userId}")
+    public ResponseEntity<?> handleSuccessfulPayment(@PathVariable String paymentIntentId, @PathVariable int userId) throws StripeException {
+        boolean success = transactionService.finalizePayment(paymentIntentId, userId);
         if (success) {
-            return ResponseEntity.ok("Payment successfully processed.");
+            return ResponseEntity.ok(Collections.singletonMap("message", "Payment successfully processed."));
         } else {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Payment processing failed.");
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Collections.singletonMap("message", "Payment processing failed."));
         }
     }
 

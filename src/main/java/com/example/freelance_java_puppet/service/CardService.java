@@ -29,7 +29,7 @@ public class CardService {
 
 
     public CardDTO addCardWithHistory(int userId, int historyId) {
-
+        System.out.println("________Adding history to card :________ " );
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
@@ -66,6 +66,8 @@ public class CardService {
 
 
     public CardDTO deleteHistoryFromCard(int userId, int historyId) {
+
+        System.out.println("_____Delete History From Cart***** " );
 
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("No user found"));
@@ -107,6 +109,8 @@ public class CardService {
 
     // Method to get the Card as DTO
     public CardDTO getCardWithHistories(int userId) {
+
+        System.out.println("Executed a Retrieve the Card entity from the database: " );
         // Retrieve the Card entity from the database
        User user = userRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("User not found"));

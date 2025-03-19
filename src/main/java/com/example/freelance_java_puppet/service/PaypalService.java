@@ -16,6 +16,7 @@ import com.paypal.base.rest.APIContext;
 import com.paypal.base.rest.PayPalRESTException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
@@ -43,6 +44,7 @@ public class PaypalService {
     private TransactionRepository transactionRepository;
 
     public Payment createPayment(int userId) throws PayPalRESTException {
+        System.out.println("Paypal Payment begin: ....");
         User user = userRepository.findById(userId).orElseThrow(()-> new RuntimeException("user not found"));
         Card card = user.getCard();
         Amount paymentAmount = new Amount();
@@ -56,6 +58,7 @@ public class PaypalService {
 
         Payment requestPayment = new Payment();
         requestPayment.setIntent("sale");
+       // requestPayment.setIntent("authorize");  please read the note down to use authorize
         requestPayment.setTransactions(List.of(transaction));
 
         // Set the payer information (required field)
@@ -65,8 +68,9 @@ public class PaypalService {
 
         //redirect URLs for approval and cancellation
         RedirectUrls redirectUrls = new RedirectUrls();
-        redirectUrls.setCancelUrl("http://localhost:8082/api/paypal/cancel");
-        redirectUrls.setReturnUrl("http://localhost:8082/api/paypal/success"+"?userId="+userId);
+        redirectUrls.setCancelUrl ("http://192.168.1.11:8082/api/paypal/cancel"); //("http://localhost:8082/api/paypal/cancel");
+        // why do all this ? it's because paypal couldn't redirect to a link that couldn't be accessed publicly
+        redirectUrls.setReturnUrl ("http://192.168.1.11:8082/api/paypal/success" + "?userId=" + userId);  //("http://localhost:8082/api/paypal/success"+"?userId="+userId);
         requestPayment.setRedirectUrls(redirectUrls);
 
         Payment createdPayment = requestPayment.create(apiContext);
@@ -77,13 +81,26 @@ public class PaypalService {
 
     //success in case
 
-    public ResponseEntity<?> paymentSuccess(String paymentId, String payerId, int userId) throws PayPalRESTException{
-        Payment payment = new Payment();
-        payment.setId(paymentId);
+    public ResponseEntity<?> paymentSuccess(String paymentId, String payerId, int userId) throws PayPalRESTException {
+        // Fetch the existing payment from PayPal (don't create a new one!)
+        Payment payment = Payment.get(apiContext, paymentId);
+
+        System.out.println("Executing Payment with ID: " + paymentId);
+
+        // ✅ Check if payment is already completed to avoid duplicate execution
+        if ("approved".equalsIgnoreCase(payment.getState())) {
+           System.out.print("Payment already completed. No need to execute again.");
+        }
+
+        // ✅ If it's not completed, execute it //
+        /*
         PaymentExecution paymentExecution = new PaymentExecution();
         paymentExecution.setPayerId(payerId);
-
         Payment executedPayment = payment.execute(apiContext, paymentExecution);
+
+        please just use this if the
+        requestPayment.setIntent("authorize"); read the note down
+         */
 
         // Fetch user by userId
         Optional<User> userOptional = userRepository.findById(userId);
@@ -95,39 +112,60 @@ public class PaypalService {
         // Get the card associated with the user
         Card card = user.getCard();
 
+        if (card == null) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("No card found for this user.");
+        }
+
+        System.out.println("Payer ID: " + payerId);
+
         // Extract transaction details from PayPal's response
-        Transaction paypalTransaction = executedPayment.getTransactions().get(0);
+        Transaction paypalTransaction = payment.getTransactions().get(0);
         double amount = Double.parseDouble(paypalTransaction.getAmount().getTotal());
         String currency = paypalTransaction.getAmount().getCurrency();
-        String description = paypalTransaction.getDescription();
 
         List<History> histories = card.getHistories();
         if (!histories.isEmpty()) {
             for (History history : histories) {
                 user.getHistories().add(history);
                 history.getUsers().add(user);
-
                 history.setCard(null);
-
                 historyRepository.save(history);
-
             }
         }
-        // this is my entity Transaction neither nor the PayPal transaction
+
+        // Save transaction to DB
         com.example.freelance_java_puppet.entity.Transaction transaction = new com.example.freelance_java_puppet.entity.Transaction();
+        //userRepository.removeCardFromUser(userId);
         user.setCard(null);
         transaction.setUser(user);
         userRepository.save(user);
-
         cardRepository.delete(card);
         transaction.setAmount(amount);
         transaction.setCurrency(currency);
         transaction.setPaymentType(PaymentType.PAYPAL);
-        transaction.setPaymentId(executedPayment.getId());
+        transaction.setPaymentId(payment.getId());
         transactionRepository.save(transaction);
 
-        return ResponseEntity.ok().body("Paypal payment successful " + executedPayment.getId());
-
+        return ResponseEntity.ok().body("Paypal payment successful " + payment.getId());
     }
+
+    /*
+    Note for paypal,
+
+    When you create a payment with:
+
+requestPayment.setIntent("authorize");
+🔹 The payment is NOT executed immediately after approval. Instead, it is only authorized, meaning PayPal checks that the buyer has enough funds but doesn’t charge them yet.
+
+✅ Steps for execution:
+User is redirected to PayPal and approves the payment.
+PayPal only authorizes the funds (payment is not completed yet).
+Your success URL (/api/paypal/success) is called.
+Now, you must manually execute the payment with:
+
+PaymentExecution paymentExecution = new PaymentExecution();
+paymentExecution.setPayerId(payerId);
+Payment executedPayment = payment.execute(apiContext, paymentExecution);
+     */
 
 }

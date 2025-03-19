@@ -81,7 +81,7 @@ public class TransactionService {
 
     // this is for the success url with ionic
 
-    public boolean finalizePayment(String paymentIntentId) throws StripeException {
+    public boolean finalizePayment(String paymentIntentId, int userId) throws StripeException {
         Stripe.apiKey = secretKey;
 
         // ✅ Step 1: Retrieve PaymentIntent from Stripe
@@ -92,17 +92,13 @@ public class TransactionService {
             throw new RuntimeException("Payment failed. Status: " + paymentIntent.getStatus());
         }
 
-        // ✅ Step 3: Check if the payment was already processed
-        Optional<Transaction> transactionOptional = transactionRepository.findByPaymentId(paymentIntentId);
-        if (transactionOptional.isPresent()) {
-            System.out.println("Payment already processed. Skipping...");
-            return true;
-        }
+        User user = userRepository.findById(userId).orElseThrow(()-> new RuntimeException("user not found with that Id"));
+
+        Card card = user.getCard();
 
         // ✅ Step 4: Move items from cart to order history
         Transaction transaction = new Transaction();
-        User user = transaction.getUser();
-        Card card = user.getCard();
+
 
         if (card == null) {
             throw new RuntimeException("Cart already cleared or not found.");
@@ -126,10 +122,11 @@ public class TransactionService {
         Charge charge = Charge.retrieve(paymentIntent.getCharges().getData().get(0).getId());
         String receiptUrl = charge.getReceiptUrl();
         emailService.sendInvoiceEmail(user.getEmail(), receiptUrl);
-
+        double amount = Math.round(paymentIntent.getAmount()); // Convert stripe amount to double
         // ✅ Step 8: Save Transaction Record
         transaction.setPaymentId(paymentIntentId);
-        transaction.setAmount(paymentIntent.getAmount() / 100);
+        transaction.setAmount(amount / 100);
+        transaction.setUser(user);
         //transaction.setStatus("Completed");
         transaction.setPaymentType(PaymentType.STRIPE);
         transaction.setCurrency(currency);

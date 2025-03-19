@@ -24,15 +24,15 @@ public class CardController {
     }
 
     @PostMapping("/add-card/{userId}/{historyId}")
-    public ResponseEntity<CardDTO> addCard(@PathVariable("userId") int userId, @PathVariable("historyId") int historyId) {
+    public CardDTO addCard(@PathVariable("userId") int userId, @PathVariable("historyId") int historyId) {
         CardDTO card = cardService.addCardWithHistory(userId, historyId);
-        return ResponseEntity.ok(card);
+        return card;
     }
 
 
     @PostMapping("/delete-card/{userId}/{historyId}")
-    public ResponseEntity<CardDTO> removeCard(@PathVariable("userId") int userId, @PathVariable("historyId") int historyId) {
+    public CardDTO removeCard(@PathVariable("userId") int userId, @PathVariable("historyId") int historyId) {
         CardDTO card = cardService.deleteHistoryFromCard(userId, historyId);
-        return ResponseEntity.ok(card);
+        return card;
     }
 }

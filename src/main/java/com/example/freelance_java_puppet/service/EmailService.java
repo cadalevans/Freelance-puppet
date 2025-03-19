@@ -2,7 +2,9 @@ package com.example.freelance_java_puppet.service;
 
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
+
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.mail.javamail.MimeMessagePreparator;
@@ -15,6 +17,9 @@ public class EmailService {
 
     @Autowired
     private JavaMailSender mailSender;
+
+    @Value("${default.email}")
+    private String senderEmail;
 
     public void sendVerificationEmail(String to, String code) {
         String subject = "Verify Your Email";
@@ -68,7 +73,7 @@ public class EmailService {
         try {
             MimeMessage message = mailSender.createMimeMessage();
             MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
-            helper.setFrom("mandoupam@gmail.com","No-Reply");
+            helper.setFrom(senderEmail,"No-Reply");
             helper.setTo(to);
             helper.setSubject(subject);
             helper.setText(htmlContent, true); // true = HTML format

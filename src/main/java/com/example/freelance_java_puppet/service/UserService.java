@@ -218,9 +218,11 @@ public class UserService {
         List<HistoryDTO> historyDTOs = user.getHistories().stream()
                 .map(history -> {
                     HistoryDTO historyDTO = new HistoryDTO();
+                    historyDTO.setId(history.getId());
                     historyDTO.setName(history.getName());
                     historyDTO.setAudio(history.getAudio());
                     historyDTO.setImage(history.getImage());
+                    historyDTO.setPrice(history.getPrice());
                     historyDTO.setDescription(history.getDescription());
                     return historyDTO;
                 })
