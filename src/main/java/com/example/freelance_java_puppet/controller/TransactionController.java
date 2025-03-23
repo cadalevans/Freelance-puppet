@@ -21,16 +21,19 @@ public class TransactionController {
     private TransactionService transactionService;
 
 
+    /*
     @PostMapping("/transaction/{userId}")
     public Transaction processStripePayment(@PathVariable("userId")int userId) throws StripeException {
         return transactionService.processPayment1(userId);
     }
 
+
+     */
     //this is the code to test with ionic frontend
 
-    @PostMapping("/transactions/{userId}")
-    public ResponseEntity<Map<String, String>> processStripePayment1(@PathVariable("userId") int userId) throws StripeException {
-        Map<String, String> response = transactionService.processPayment(userId);
+    @PostMapping("/transactions/{userId}/{clientType}")
+    public ResponseEntity<Map<String, String>> processStripePayment1(@PathVariable("userId") int userId, @PathVariable("clientType") String clientType) throws StripeException {
+        Map<String, String> response = transactionService.processPayment(userId, clientType);
         return ResponseEntity.ok(response);
     }
 
