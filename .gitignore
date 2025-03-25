@@ -34,5 +34,5 @@ build/
 
 
 # Ignore application properties and YAML config files
-#application.properties
+application.properties
 application.yml
