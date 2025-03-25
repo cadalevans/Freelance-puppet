@@ -3,6 +3,7 @@ package com.example.freelance_java_puppet.controller;
 import com.example.freelance_java_puppet.entity.Transaction;
 import com.example.freelance_java_puppet.service.TransactionService;
 import com.stripe.exception.StripeException;
+import com.stripe.model.Charge;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -31,18 +32,20 @@ public class TransactionController {
      */
     //this is the code to test with ionic frontend
 
-    @PostMapping("/transactions/{userId}/{clientType}")
-    public ResponseEntity<Map<String, String>> processStripePayment1(@PathVariable("userId") int userId, @PathVariable("clientType") String clientType) throws StripeException {
-        Map<String, String> response = transactionService.processPayment(userId, clientType);
+    @PostMapping("/transactions/{userId}")
+    public ResponseEntity<Map<String, String>> processStripePayment1(@PathVariable("userId") int userId
+                                                                   //  @PathVariable("clientType") String clientType
+    ) throws StripeException {
+        Map<String, String> response = transactionService.processPayment(userId);
         return ResponseEntity.ok(response);
     }
 
 
     //success url after payment
 
-    @PostMapping("/payment-success/{paymentIntentId}/{userId}")
-    public ResponseEntity<?> handleSuccessfulPayment(@PathVariable String paymentIntentId, @PathVariable int userId) throws StripeException {
-        boolean success = transactionService.finalizePayment(paymentIntentId, userId);
+    @PostMapping("/payment-success/{charge}/{userId}")
+    public ResponseEntity<?> handleSuccessfulPayment(@PathVariable Charge charge, @PathVariable int userId) throws StripeException {
+        boolean success = transactionService.finalizePayment(charge, userId);
         if (success) {
             return ResponseEntity.ok(Collections.singletonMap("message", "Payment successfully processed."));
         } else {

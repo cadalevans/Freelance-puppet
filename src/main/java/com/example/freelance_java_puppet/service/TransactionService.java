@@ -49,8 +49,9 @@ public class TransactionService {
     private String secretKey;
 
     // This is the code to test with ionic FrontEnd using checkout stripe for creating all things manually you can look for the commented code below
-    public Map<String, String> processPayment(int userId, String clientType) throws StripeException {
+    public Map<String, String> processPayment(int userId) throws StripeException {
         Stripe.apiKey = secretKey;
+        System.out.println("✅ Stripe checkout begin!!!  Payment: ************* " );
 
         // ✅ Step 1: Fetch User
         Optional<User> userOptional = userRepository.findById(userId);
@@ -73,6 +74,8 @@ public class TransactionService {
                 .addPaymentMethodType(SessionCreateParams.PaymentMethodType.CARD)
                 .addPaymentMethodType(SessionCreateParams.PaymentMethodType.WECHAT_PAY)
                 .putExtraParam("payment_method_options[wechat_pay][client]", "web")
+                .putMetadata("userId", String.valueOf(userId))
+                .putExtraParam("payment_intent_data[metadata][userId]", String.valueOf(userId)) // ✅ Ensure metadata is inherited by PaymentIntent
                 .addLineItem(
                         SessionCreateParams.LineItem.builder()
                                 .setPriceData(
@@ -104,13 +107,25 @@ public class TransactionService {
 
 
     // this is for the success url with ionic
+    // Due to fact that The payment intent sometime don't contain the Charge object , instead of sending the payment intent, it will be better to send the charge directly
+    // And we can remove the userId in parameter because when using checkout stripe i pass the userId ass a metadata so it's very easy to retrieve it because it's containt in the paymentIntent
+    // but for now i can leave userId in parameter but you can like this to retrieve it
+    // userIdStr = chargePayment.getMetadata().get("userId");  but it would be in string type so you will need to convert it
+    // userId = Integer.parseInt(userIdStr);
 
-    public boolean finalizePayment(String paymentIntentId, int userId) throws StripeException {
+
+    public boolean finalizePayment(Charge charge, int userId) throws StripeException {  //String paymentIntentId
         Stripe.apiKey = secretKey;
+
+        // Retrieve the payment intent ID in the charge object
+        String paymentIntentId = charge.getPaymentIntent();
+
+        System.out.println("✅ Finalizing Payment: ************* " );
 
         // ✅ Step 1: Retrieve PaymentIntent from Stripe
         PaymentIntent paymentIntent = PaymentIntent.retrieve(paymentIntentId);
 
+        System.out.println("✅ Step 2: Check if payment was ALREADY successful " + paymentIntent.getStatus() );
         // ✅ Step 2: Check if payment was ALREADY successful
         if (!"succeeded".equals(paymentIntent.getStatus())) {
             throw new RuntimeException("Payment failed. Status: " + paymentIntent.getStatus());
@@ -143,19 +158,29 @@ public class TransactionService {
         cardRepository.delete(card);
 
         // ✅ Step 7: Send Invoice Email
-        Charge charge = Charge.retrieve(paymentIntent.getCharges().getData().get(0).getId());
+        // Charge charge = Charge.retrieve(paymentIntent.getCharges().getData().get(0).getId());
         String receiptUrl = charge.getReceiptUrl();
         emailService.sendInvoiceEmail(user.getEmail(), receiptUrl);
+        // if the charge is null, alternatively we can do this :
         double amount = Math.round(paymentIntent.getAmount()); // Convert stripe amount to double
         // ✅ Step 8: Save Transaction Record
         transaction.setPaymentId(paymentIntentId);
         transaction.setAmount(amount / 100);
         transaction.setUser(user);
         //transaction.setStatus("Completed");
-        transaction.setPaymentType(PaymentType.STRIPE);
+        String paymentType;
+        List<String> paymentMethods = paymentIntent.getPaymentMethodTypes();
+        if (paymentMethods != null && !paymentMethods.isEmpty()) {
+            paymentType = paymentMethods.get(0);
+            System.out.println("Payment method used: " + paymentType);
+        } else {
+            System.out.println("No payment method found for this transaction.");
+            paymentType = "STRIPE";
+        }
+        transaction.setPaymentType(PaymentType.valueOf(paymentType.toUpperCase()));
         transaction.setCurrency(currency);
+        System.out.println("✅ ✅ ✅ ✅ ✅ ✅ ✅ ✅ ✅ ✅ ✅✅ ✅✅ ✅ ✅ ✅✅ ✅✅ " );
         transactionRepository.save(transaction);
-
 
         return true;
     }
