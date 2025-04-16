@@ -30,10 +30,16 @@ public class UserController {
     private PasswordEncoder passwordEncoder;
 
     // 1️⃣ User Registration
-    @PostMapping(value = "/register", consumes = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<String> registerUser(@RequestBody User user) {
-        userService.saveUser(user);
-        return ResponseEntity.ok("User registered successfully! Check your email for verification.");
+    @PostMapping(value =  "/register", consumes = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<?> registerUser(@RequestBody User user) {
+        try {
+            userService.saveUser(user);
+            return ResponseEntity.ok(Map.of("message", "User registered successfully! Check your email for verification."));
+        } catch (Exception e) {
+            return ResponseEntity
+                    .status(HttpStatus.BAD_REQUEST)
+                    .body(Map.of("message", e.getMessage()));
+        }
     }
 
     @GetMapping("/is-verified/{email}")

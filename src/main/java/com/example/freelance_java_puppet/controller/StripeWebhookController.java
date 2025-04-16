@@ -1,5 +1,8 @@
 package com.example.freelance_java_puppet.controller;
 
+import com.example.freelance_java_puppet.entity.User;
+import com.example.freelance_java_puppet.repository.UserRepository;
+import com.example.freelance_java_puppet.service.EmailService;
 import com.example.freelance_java_puppet.service.TransactionService;
 import com.stripe.exception.SignatureVerificationException;
 import com.stripe.exception.StripeException;
@@ -28,6 +31,11 @@ public class StripeWebhookController {
     // Global variable
     String userIdStr;
     int userId;
+    @Autowired
+    private UserRepository userRepository;
+
+    @Autowired
+    private EmailService emailService;
 
     @PostMapping("/stripe")
     public ResponseEntity<String> handleStripeEvent(@RequestBody String payload, @RequestHeader("Stripe-Signature") String sigHeader) {
@@ -125,6 +133,10 @@ public class StripeWebhookController {
         System.out.println("✅ ✅ ✅Charge succeeded with user Id : ✅ ✅ : " + userId);
         // Complete the transaction after the charge is success
          // transactionService.finalizePayment(charge, userId);
+        String receiptUrl = charge.getReceiptUrl();
+        User user = userRepository.findById(userId).orElseThrow(()-> new RuntimeException("user not found"));
+        System.out.println(" sending email to : " + user.getEmail() + receiptUrl );
+        emailService.sendInvoiceEmail(user.getEmail(), receiptUrl);
 
     }
 

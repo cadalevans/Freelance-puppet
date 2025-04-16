@@ -10,7 +10,9 @@ import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 @Entity
 @NoArgsConstructor
@@ -32,8 +34,9 @@ public class User {
 
     private String code;
 
+    @ElementCollection(fetch = FetchType.EAGER)
     @Enumerated(EnumType.STRING)
-    private Role role;
+    private Set<Role> role = new HashSet<>();
     private LocalDateTime codeExpiryDate;
 
     @JsonIgnore  // This will prevent the 'card' field from being serialized
@@ -67,9 +70,7 @@ public class User {
         this.lastName = lastName;
     }
 
-    public void setRole(Role role) {
-        this.role = role;
-    }
+
 
     public boolean isVerified() {
         return isVerified;
@@ -107,8 +108,12 @@ public class User {
         this.codeExpiryDate = codeExpiryDate;
     }
 
-    public Role getRole() {
+    public Set<Role> getRole() {
         return role;
+    }
+
+    public void setRole(Set<Role> role) {
+        this.role = role;
     }
 
     public String getFirstName() {

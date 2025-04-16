@@ -48,6 +48,10 @@ public class TransactionService {
     @Value("${stripe.key.secret}")
     private String secretKey;
 
+    @Autowired
+    private HistoryService historyService;
+
+
     // This is the code to test with ionic FrontEnd using checkout stripe for creating all things manually you can look for the commented code below
     public Map<String, String> processPayment(int userId) throws StripeException {
         Stripe.apiKey = secretKey;
@@ -90,8 +94,8 @@ public class TransactionService {
                                 .setQuantity(1L)
                                 .build())
                 .setMode(SessionCreateParams.Mode.PAYMENT)
-                .setSuccessUrl("https://example.com/success")
-                .setCancelUrl("https://example.com/cancel")
+                .setSuccessUrl(webBaseUrl + "/api/stripe/stripe/success")    //"https://example.com/success"
+                .setCancelUrl(webBaseUrl + "api/stripe/stripe/cancel")     //"https://example.com/cancel"
                 .build();
 
         // ✅ Step 5: Create Checkout Session
@@ -160,6 +164,7 @@ public class TransactionService {
         // ✅ Step 7: Send Invoice Email
         // Charge charge = Charge.retrieve(paymentIntent.getCharges().getData().get(0).getId());
         String receiptUrl = charge.getReceiptUrl();
+        System.out.println(" sending email to : " + user.getEmail() + receiptUrl );
         emailService.sendInvoiceEmail(user.getEmail(), receiptUrl);
         // if the charge is null, alternatively we can do this :
         double amount = Math.round(paymentIntent.getAmount()); // Convert stripe amount to double
@@ -179,8 +184,11 @@ public class TransactionService {
         }
         transaction.setPaymentType(PaymentType.valueOf(paymentType.toUpperCase()));
         transaction.setCurrency(currency);
-        System.out.println("✅ ✅ ✅ ✅ ✅ ✅ ✅ ✅ ✅ ✅ ✅✅ ✅✅ ✅ ✅ ✅✅ ✅✅ " );
+        System.out.println("Tik tik ✅ ✅ ✅ ✅ ✅ ✅ ✅ ✅ ✅ ✅ ✅✅ ✅✅ ✅ ✅ ✅✅ ✅✅ " );
         transactionRepository.save(transaction);
+        // Send History To toys via MQTT
+
+        historyService.sendHistoryDownloadLink(userId);
 
         return true;
     }

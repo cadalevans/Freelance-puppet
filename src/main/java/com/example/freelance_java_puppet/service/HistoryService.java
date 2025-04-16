@@ -1,19 +1,21 @@
 package com.example.freelance_java_puppet.service;
 
 import com.example.freelance_java_puppet.DTO.HistoryDTO;
+import com.example.freelance_java_puppet.configuration.MqttPublisher;
 import com.example.freelance_java_puppet.entity.Category;
 import com.example.freelance_java_puppet.entity.History;
 import com.example.freelance_java_puppet.entity.User;
 import com.example.freelance_java_puppet.repository.HistoryRepository;
 import com.example.freelance_java_puppet.repository.UserRepository;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -26,6 +28,9 @@ public class HistoryService {
     private FileService fileService;
     @Autowired
     private UserRepository userRepository;
+
+    @Autowired
+    private MqttPublisher mqttPublisher;
 
     public History addHistory(String name, String description, MultipartFile imageFile, MultipartFile audioFile, double price) {
         // Step 1: Upload files and get their relative URLs
@@ -93,6 +98,50 @@ public class HistoryService {
 
         return historyDTO;
     }
+
+    String baseUrl = "http://localhost:8082";
+
+    // Send History to the toys
+
+    public void sendHistoryDownloadLink(int userId) {
+        Optional<User> userOpt = userRepository.findById(userId);
+        if (userOpt.isEmpty()) {
+            System.out.println("User not found: " + userId);
+            return;
+        }
+
+        User user = userOpt.get();
+        List<History> histories = user.getHistories();
+
+        for (History history : histories) {
+
+
+            //String audioFilename = new File(history.getAudio()).getName();
+            //String imageFilename = new File(history.getImage()).getName();
+
+            String audioUrl = baseUrl + history.getAudio();
+            String imageUrl = baseUrl + history.getImage();
+
+            Map<String, Object> payload = new HashMap<>();
+            payload.put("name", history.getName());
+            payload.put("description", history.getDescription());
+            payload.put("audioUrl", audioUrl);
+            payload.put("imageUrl", imageUrl);
+
+            try {
+                ObjectMapper mapper = new ObjectMapper();
+                String jsonPayload = mapper.writeValueAsString(payload);
+                String topic = "history/download/" + userId;
+
+                mqttPublisher.publishMessage(topic, jsonPayload);
+                System.out.println("History sent to user: " + userId + " | History: " + history.getName());
+            } catch (JsonProcessingException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+
 
 
 

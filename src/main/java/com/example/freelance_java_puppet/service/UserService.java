@@ -3,6 +3,7 @@ package com.example.freelance_java_puppet.service;
 import com.example.freelance_java_puppet.DTO.HistoryDTO;
 import com.example.freelance_java_puppet.entity.Category;
 import com.example.freelance_java_puppet.entity.History;
+import com.example.freelance_java_puppet.entity.Role;
 import com.example.freelance_java_puppet.entity.User;
 import com.example.freelance_java_puppet.repository.HistoryRepository;
 import com.example.freelance_java_puppet.repository.UserRepository;
@@ -12,6 +13,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -53,6 +55,7 @@ public class UserService {
 
         user.setCodeExpiryDate(codeExpirationDate);
         user.setVerified(false);
+        user.setRole(Collections.singleton(Role.ROLE_USER));
 
 
         User savedUser = userRepository.save(user);
@@ -113,6 +116,7 @@ public class UserService {
 
         user.setCodeExpiryDate(codeExpirationDate);
         user.setVerified(false);
+
 
         // Save the updated user
         userRepository.save(user);

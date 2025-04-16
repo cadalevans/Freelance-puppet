@@ -1,5 +1,6 @@
 package com.example.freelance_java_puppet.service;
 
+import com.example.freelance_java_puppet.DTO.AddCardRequest;
 import com.example.freelance_java_puppet.DTO.CardDTO;
 import com.example.freelance_java_puppet.DTO.HistoryDTO;
 import com.example.freelance_java_puppet.entity.Card;
@@ -64,7 +65,7 @@ public class CardService {
         return getCardWithHistories(userId);
     }
 
-
+    // Delete History from cart
     public CardDTO deleteHistoryFromCard(int userId, int historyId) {
 
         System.out.println("_____Delete History From Cart***** " );
@@ -145,5 +146,42 @@ public class CardService {
         return cardDTO;
     }
 
+    // This method allow user to add multiple histories at the same time in card
+    public CardDTO addCardWithHistories(AddCardRequest request) {
+        System.out.println("________Adding multiple histories to card :________ " );
+
+        User user = userRepository.findById(request.getUserId())
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        if (user.getCard() == null) {
+            Card card = new Card();
+            card.setUser(user);
+            user.setCard(card);
+        }
+
+        Card card = user.getCard();
+
+        for (int historyId : request.getHistoryIds()) {
+            History history = historyRepository.findById(historyId)
+                    .orElseThrow(() -> new RuntimeException("History item not found"));
+
+            card.getHistories().add(history); // Add each history item
+            history.getCards().add(card);
+        }
+
+        // Calculate total price
+        double totalPrice = card.getHistories()
+                .stream()
+                .mapToDouble(History::getPrice)
+                .sum();
+        card.setTotalPrice(totalPrice);
+
+        // Save changes
+        Card savedCard = cardRepository.save(card);
+        user.setCard(savedCard);
+        userRepository.save(user);
+
+        return getCardWithHistories(request.getUserId());
+    }
 
 }

@@ -82,7 +82,33 @@ public class PaypalController {
     @GetMapping("/cancel")
     public ResponseEntity<String> paymentCancel() {
         // If the user cancels the payment, this URL will be called
-        return ResponseEntity.ok("Payment was canceled.");
+       // return ResponseEntity.ok("Payment was canceled.");
+
+        String htmlResponse = "<!DOCTYPE html>" +
+                "<html lang='en'>" +
+                "<head>" +
+                "<meta charset='UTF-8'>" +
+                "<meta name='viewport' content='width=device-width, initial-scale=1.0'>" +
+                "<title>Payment Cancelled</title>" +
+                "<style>" +
+                "body { font-family: Arial, sans-serif; text-align: center; background-color: #f4f4f4; padding: 50px; }" +
+                ".container { background: white; padding: 30px; border-radius: 10px; box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1); max-width: 400px; margin: auto; }" +
+                ".cancel-icon { font-size: 50px; color: #dc3545; margin-bottom: 10px; }" +
+                "h1 { color: #333; }" +
+                "p { color: #666; font-size: 16px; }" +
+                "</style>" +
+                "</head>" +
+                "<body>" +
+                "<div class='container'>" +
+                "<div class='cancel-icon'>❌</div>" +
+                "<h1>Payment Cancelled</h1>" +
+                "<p>Your payment has been cancelled. You can try again anytime.</p>" +
+                "</div>" +
+                "</body>" +
+                "</html>";
+
+        return ResponseEntity.ok().header(HttpHeaders.CONTENT_TYPE, "text/html").body(htmlResponse);
     }
+
 
 }

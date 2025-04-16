@@ -43,6 +43,12 @@ public class PaypalService {
     @Autowired
     private TransactionRepository transactionRepository;
 
+    @Value("${payment.cancelUrl}")
+    private String cancelUrl;
+
+    @Value("${payment.successUrl}")
+    private String successUrl;
+
     public Payment createPayment(int userId) throws PayPalRESTException {
         System.out.println("Paypal Payment begin: ....");
         User user = userRepository.findById(userId).orElseThrow(()-> new RuntimeException("user not found"));
@@ -68,9 +74,9 @@ public class PaypalService {
 
         //redirect URLs for approval and cancellation
         RedirectUrls redirectUrls = new RedirectUrls();
-        redirectUrls.setCancelUrl ("http://192.168.1.11:8082/api/paypal/cancel"); //("http://localhost:8082/api/paypal/cancel");
+        redirectUrls.setCancelUrl (cancelUrl); //("http://localhost:8082/api/paypal/cancel");
         // why do all this ? it's because paypal couldn't redirect to a link that couldn't be accessed publicly
-        redirectUrls.setReturnUrl ("http://192.168.1.11:8082/api/paypal/success" + "?userId=" + userId);  //("http://localhost:8082/api/paypal/success"+"?userId="+userId);
+        redirectUrls.setReturnUrl (successUrl + "?userId=" + userId);  //("http://localhost:8082/api/paypal/success"+"?userId="+userId);
         requestPayment.setRedirectUrls(redirectUrls);
 
         Payment createdPayment = requestPayment.create(apiContext);

@@ -44,6 +44,7 @@ public class EmailService {
     }
 
     public void sendInvoiceEmail(String to, String invoiceUrl) {
+        System.out.println("Beginning the sending email operation " );
         String subject = "💳 Payment Receipt - Thank you for your purchase!";
         String content = """
             <div style='font-family: Arial, sans-serif; max-width: 600px; margin: auto; border: 1px solid #ddd; border-radius: 8px; padding: 20px; background-color: #f9f9f9;'>

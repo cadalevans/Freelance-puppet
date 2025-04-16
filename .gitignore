@@ -36,3 +36,6 @@ build/
 # Ignore application properties and YAML config files
 application.properties
 application.yml
+
+src/main/resources/application.properties
+src/main/resources/application.yml

@@ -1,6 +1,5 @@
 package com.example.freelance_java_puppet.entity;
 
-
 import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;

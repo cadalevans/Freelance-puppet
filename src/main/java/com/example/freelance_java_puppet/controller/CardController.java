@@ -1,6 +1,7 @@
 package com.example.freelance_java_puppet.controller;
 
 import com.example.freelance_java_puppet.DTO.CardDTO;
+import com.example.freelance_java_puppet.DTO.AddCardRequest;
 import com.example.freelance_java_puppet.DTO.HistoryDTO;
 import com.example.freelance_java_puppet.entity.Card;
 import com.example.freelance_java_puppet.entity.History;
@@ -34,5 +35,12 @@ public class CardController {
     public CardDTO removeCard(@PathVariable("userId") int userId, @PathVariable("historyId") int historyId) {
         CardDTO card = cardService.deleteHistoryFromCard(userId, historyId);
         return card;
+    }
+
+    // Add multiple history at the same time
+    @PostMapping("/cart/add-multiple")
+    public ResponseEntity<CardDTO> addHistoriesToCart(@RequestBody AddCardRequest request) {
+        CardDTO updatedCard = cardService.addCardWithHistories(request);
+        return ResponseEntity.ok(updatedCard);
     }
 }

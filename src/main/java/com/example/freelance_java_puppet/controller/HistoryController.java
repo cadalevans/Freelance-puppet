@@ -45,4 +45,26 @@ public class HistoryController {
 
         return historyService.getHistoryById(historyId);
     }
+
+    // Send the link with mosquito
+
+    /*
+    public String sendHistory(@PathVariable String userId) {
+// Fetch the user's purchased history from the database
+        String downloadLink = "https://yourserver.com/download/" + userId;
+
+        // Send the MQTT message
+        historyService.sendHistoryDownloadLink(userId, downloadLink);
+
+        return "History download link sent!";
+    }
+
+     */
+
+    @PostMapping("/send/{userId}")
+    public ResponseEntity<String> sendHistoryToToy(@PathVariable int userId) {
+        historyService.sendHistoryDownloadLink(userId);
+        return ResponseEntity.ok("Histories sent to toy via MQTT for user: " + userId);
+    }
+
 }
